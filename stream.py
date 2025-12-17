@@ -21,7 +21,7 @@ st.set_page_config(page_title="PRS Hospital Chatbot", page_icon="🏥")
 st.title("🏥 PRS Hospital Chatbot")
 
 # ===============================
-# Sidebar
+# Sidebar - About
 # ===============================
 with st.sidebar.expander("About"):
     st.markdown("""
@@ -33,7 +33,7 @@ with st.sidebar.expander("About"):
     """, unsafe_allow_html=True)
 
 # ===============================
-# SPECIALTIES (AUTO-GENERATED)
+# Sidebar - Specialties
 # ===============================
 with st.sidebar.expander("Specialities"):
     st.markdown("Click on a specialty to view available doctors:")
@@ -41,11 +41,16 @@ with st.sidebar.expander("Specialities"):
     for spec in specialties:
         if st.button(spec):
             doctors = df[df["Speciality"] == spec]
-            doc_list = "\n".join([f"{row['Doctor Name']} - {row['Consultation Time']}" for _, row in doctors.iterrows()])
+            doc_list = "\n".join([
+                f"{row['Doctor Name']} - {row['Consultation Time'].lower()}" 
+                for _, row in doctors.iterrows()
+            ])
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
             st.session_state.chat_history.append(("Bot", f"**{spec} Doctors:**\n{doc_list}"))
 
 # ===============================
-# Contact / Location
+# Sidebar - Contact
 # ===============================
 with st.sidebar.expander("Contact / Locate Us"):
     st.markdown("""
@@ -85,10 +90,10 @@ if user_input and user_input != st.session_state.last_input:
     st.session_state.last_input = user_input
     st.session_state.chat_history.append(("You", user_input))
 
-    if "book appointment" in user_input.lower():
-        doctor_name = extract_doctor_name(user_input)
-        requested_day = extract_day(user_input)
+    doctor_name = extract_doctor_name(user_input)
+    requested_day = extract_day(user_input)
 
+    if "book appointment" in user_input.lower():
         if doctor_name:
             st.session_state.booking_state.update({
                 "active": True,
@@ -114,31 +119,30 @@ if st.session_state.booking_state["active"]:
     st.write(f"📅 Booking appointment with **{st.session_state.booking_state['doctor']}**")
 
     patient_name = st.text_input("Enter your name")
-    time_slot = st.text_input("Enter time slot (e.g., 10AM to 11AM)")
+    time_slot = st.text_input("Enter time slot (e.g., 10am to 11am)")
 
     if st.button("Confirm Appointment"):
         try:
             start_str, end_str = time_slot.split("to")
-            start_hour = datetime.strptime(start_str.strip().upper(), "%I%p")
-            end_hour = datetime.strptime(end_str.strip().upper(), "%I%p")
-
-            earliest = datetime.strptime("9AM", "%I%p")
-            latest = datetime.strptime("6PM", "%I%p")
+            start_hour = datetime.strptime(start_str.strip().lower(), "%I%p")
+            end_hour = datetime.strptime(end_str.strip().lower(), "%I%p")
+            earliest = datetime.strptime("9am", "%I%p")
+            latest = datetime.strptime("6pm", "%I%p")
 
             if start_hour < earliest or end_hour > latest:
-                st.warning("⛔ Appointments only between 9AM and 6PM.")
+                st.warning("⛔ Appointments only between 9am and 6pm.")
             else:
                 result = book_appointment(
                     st.session_state.booking_state["doctor"],
                     patient_name,
                     st.session_state.booking_state["day"]
                     or datetime.now().strftime("%A").lower(),
-                    time_slot
+                    time_slot.lower()
                 )
                 st.session_state.chat_history.append(("Bot", result))
                 st.session_state.booking_state = {"active": False, "doctor": None, "day": None}
         except:
-            st.warning("⛔ Invalid time format. Use '10AM to 11AM'.")
+            st.warning("⛔ Invalid time format. Use '10am to 11am'.")
 
 # ===============================
 # Display Chat History
