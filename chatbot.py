@@ -7,7 +7,8 @@ from datetime import datetime
 from transformers import BertTokenizer, BertForSequenceClassification
 import gdown
 
-# ===============================
+# ===============================                
+
 # SAFE MODEL DOWNLOAD (GitHub)
 # ===============================
 MODEL_DIR = "bert_doctor_classification"
@@ -141,3 +142,4 @@ if __name__ == "__main__":
         if q.lower() in ["exit", "quit"]:
             break
         print("Bot:", chatbot_response(q))
+
