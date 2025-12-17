@@ -1,4 +1,6 @@
-streamlit
-torch
-torchvision
-torchaudio
+torch==2.5.1
+transformers==4.46.2
+joblib==1.4.2
+gdown==5.2.0
+pandas==2.3.3
+streamlit==1.52.1
