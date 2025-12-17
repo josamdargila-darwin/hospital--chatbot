@@ -36,21 +36,18 @@ with st.sidebar.expander("About"):
 # Sidebar - Specialties
 # ===============================
 with st.sidebar.expander("Specialities"):
-    st.markdown("Click on a specialty to view available doctors:")
+    st.markdown("Click a specialty to view available doctors:")
     specialties = sorted(df["Speciality"].dropna().unique())
     for spec in specialties:
         if st.button(spec):
             doctors = df[df["Speciality"] == spec]
-            doc_list = "\n".join([
-                f"{row['Doctor Name']} - {row['Consultation Time'].lower()}" 
-                for _, row in doctors.iterrows()
-            ])
+            doc_list = "\n".join([f"{row['Doctor Name']} - {row['Consultation Time']}" for _, row in doctors.iterrows()])
             if "chat_history" not in st.session_state:
                 st.session_state.chat_history = []
             st.session_state.chat_history.append(("Bot", f"**{spec} Doctors:**\n{doc_list}"))
 
 # ===============================
-# Sidebar - Contact
+# Sidebar - Contact / Location
 # ===============================
 with st.sidebar.expander("Contact / Locate Us"):
     st.markdown("""
@@ -90,10 +87,10 @@ if user_input and user_input != st.session_state.last_input:
     st.session_state.last_input = user_input
     st.session_state.chat_history.append(("You", user_input))
 
-    doctor_name = extract_doctor_name(user_input)
-    requested_day = extract_day(user_input)
-
     if "book appointment" in user_input.lower():
+        doctor_name = extract_doctor_name(user_input)
+        requested_day = extract_day(user_input)
+
         if doctor_name:
             st.session_state.booking_state.update({
                 "active": True,
@@ -126,6 +123,7 @@ if st.session_state.booking_state["active"]:
             start_str, end_str = time_slot.split("to")
             start_hour = datetime.strptime(start_str.strip().lower(), "%I%p")
             end_hour = datetime.strptime(end_str.strip().lower(), "%I%p")
+
             earliest = datetime.strptime("9am", "%I%p")
             latest = datetime.strptime("6pm", "%I%p")
 
@@ -137,7 +135,7 @@ if st.session_state.booking_state["active"]:
                     patient_name,
                     st.session_state.booking_state["day"]
                     or datetime.now().strftime("%A").lower(),
-                    time_slot.lower()
+                    time_slot
                 )
                 st.session_state.chat_history.append(("Bot", result))
                 st.session_state.booking_state = {"active": False, "doctor": None, "day": None}
