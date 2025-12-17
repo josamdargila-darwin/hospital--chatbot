@@ -6,12 +6,19 @@ from chatbot import (
     book_appointment
 )
 from datetime import datetime
+import pandas as pd
+
+# ===============================
+# Load hospital dataset
+# ===============================
+df = pd.read_csv("Hospital_Information124.csv")
+df["Speciality"] = df["Speciality"].str.strip()
 
 # ===============================
 # Page config
 # ===============================
 st.set_page_config(page_title="PRS Hospital Chatbot", page_icon="🏥")
-st.title("🏥 PRS Hospital")
+st.title("🏥 PRS Hospital Chatbot")
 
 # ===============================
 # Sidebar
@@ -25,31 +32,21 @@ with st.sidebar.expander("About"):
         </div>
     """, unsafe_allow_html=True)
 
+# ===============================
+# SPECIALTIES (AUTO-GENERATED)
+# ===============================
 with st.sidebar.expander("Specialities"):
-    st.markdown("""
-        <ul>
-            <li>Cardiologist</li>
-            <li>ENT</li>
-            <li>Gastroenterologist</li>
-            <li>Gynecologist</li>
-            <li>Nephrologist</li>
-            <li>Neurologist</li>
-            <li>Urologist</li>
-            <li>Pulmonologist</li>
-            <li>Dermatologist</li>
-            <li>Ophthalmologist</li>
-            <li>Orthopaedician</li>
-            <li>Oncologist</li>
-            <li>Pathologist</li>
-            <li>Radiologist</li>
-            <li>Psychiatrist</li>
-            <li>Psychologist</li>
-            <li>Endocrinologist</li>
-            <li>General Surgeon</li>
-            <li>Paediatrician</li>
-        </ul>
-    """, unsafe_allow_html=True)
+    st.markdown("Click on a specialty to view available doctors:")
+    specialties = sorted(df["Speciality"].dropna().unique())
+    for spec in specialties:
+        if st.button(spec):
+            doctors = df[df["Speciality"] == spec]
+            doc_list = "\n".join([f"{row['Doctor Name']} - {row['Consultation Time']}" for _, row in doctors.iterrows()])
+            st.session_state.chat_history.append(("Bot", f"**{spec} Doctors:**\n{doc_list}"))
 
+# ===============================
+# Contact / Location
+# ===============================
 with st.sidebar.expander("Contact / Locate Us"):
     st.markdown("""
         <div style="text-align:center;">
@@ -82,7 +79,7 @@ st.subheader("💬 Hospital Chatbot Assistant")
 user_input = st.text_input("Type your message here:")
 
 # ===============================
-# Handle user input (NO DUPLICATES)
+# Handle user input
 # ===============================
 if user_input and user_input != st.session_state.last_input:
     st.session_state.last_input = user_input
@@ -144,7 +141,7 @@ if st.session_state.booking_state["active"]:
             st.warning("⛔ Invalid time format. Use '10AM to 11AM'.")
 
 # ===============================
-# Display Chat History (LINE BY LINE FIX)
+# Display Chat History
 # ===============================
 st.markdown("---")
 for sender, message in st.session_state.chat_history:
